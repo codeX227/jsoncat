@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * @Description
+ * @Description 读取配置资源文件
  * @Author Goodenough
  * @Date 2021/3/5 21:14
  */
