@@ -2,9 +2,11 @@ package com.github.jsoncat.core;
 
 import com.github.jsoncat.annotation.boot.ComponentScan;
 import com.github.jsoncat.common.Banner;
+import com.github.jsoncat.core.aop.factory.InterceptorFactory;
 import com.github.jsoncat.core.config.Configuration;
 import com.github.jsoncat.core.config.ConfigurationManager;
 import com.github.jsoncat.core.ioc.BeanFactory;
+import com.github.jsoncat.core.ioc.DependencyInjection;
 import com.github.jsoncat.core.springmvc.factory.RouteMethodMapper;
 import com.github.jsoncat.factory.ClassFactory;
 
@@ -23,6 +25,11 @@ import java.util.Objects;
  */
 public final class ApplicationContext {
 
+    private static final ApplicationContext APPLICATIONCONTEXT = new ApplicationContext();
+
+    public static ApplicationContext getApplicationContext(){
+        return APPLICATIONCONTEXT;
+    }
 
     public void run(Class<?> applicationClass){
         //打印标志
@@ -38,8 +45,12 @@ public final class ApplicationContext {
         //加载配置文件
         loadResources(applicationClass);
         //加载拦截器
-
+        InterceptorFactory.loadInterceptors(packageNames);
         //依赖注入
+        DependencyInjection.inject(packageNames);
+        //在来自ClassFactory的类上应用bean post处理器。
+        //例如，用@Component或@RestController注释的类
+
    }
 
     /**

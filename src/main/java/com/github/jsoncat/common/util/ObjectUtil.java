@@ -4,7 +4,7 @@ import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 
 /**
- * @Description 属性编辑器
+ * @Description 配置文件属性编辑器
  * @Author Goodenough
  * @Date 2021/3/5 15:46
  */

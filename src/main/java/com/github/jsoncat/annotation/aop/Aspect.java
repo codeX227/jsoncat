@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @Description 申明动态代理注解
+ * @Description 标记动态代理类
  * @Author Goodenough
  * @Date 2021/3/2 16:09
  */
