@@ -3,15 +3,14 @@ package com.github.jsoncat.core.ioc;
 import com.github.jsoncat.annotation.ioc.Component;
 import com.github.jsoncat.annotation.springmvc.RestController;
 import com.github.jsoncat.common.util.ReflectionUtil;
+import com.github.jsoncat.core.aop.factory.AopProxyBeanPostProcessorFactory;
+import com.github.jsoncat.core.aop.intercept.BeanPostProcessor;
 import com.github.jsoncat.core.config.ConfigurationFactory;
 import com.github.jsoncat.core.config.ConfigurationManager;
 import com.github.jsoncat.exception.DoGetBeanException;
 import com.github.jsoncat.factory.ClassFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -86,5 +85,27 @@ public final class BeanFactory {
             SINGLE_BEAN_NAMES_TYPE_MAP.put(className, beanNames);
         }
         return beanNames;
+    }
+
+    /**
+     * 对所有 bean 进行后置处理
+     */
+    public static void applyBeanPostProcessors() {
+        BEANS.replaceAll((beanName, beanInstance) -> {
+            BeanPostProcessor beanPostProcessor = AopProxyBeanPostProcessorFactory.get(beanInstance.getClass());
+            return beanPostProcessor.postProcessAfterInitialization(beanInstance);
+        });
+    }
+
+    public static <T> Map<String, T> getBeansOfType(Class<T> type){
+        Map<String, T> result = new HashMap<>();
+        String[] beanNames = getBeanNamesForType(type);
+        for (String beanName : beanNames) {
+            Object beanInstance = BEANS.get(beanName);
+            if (!type.isInstance(beanInstance))
+                throw new DoGetBeanException("not fount bean implement，the bean :" + type.getName());
+            result.put(beanName, type.cast(beanInstance));
+        }
+        return result;
     }
 }

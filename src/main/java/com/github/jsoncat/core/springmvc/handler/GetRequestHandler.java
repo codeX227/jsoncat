@@ -1,0 +1,80 @@
+package com.github.jsoncat.core.springmvc.handler;
+
+import com.github.jsoncat.core.ioc.BeanFactory;
+import com.github.jsoncat.core.ioc.BeanHelper;
+import com.github.jsoncat.core.springmvc.entity.MethodDetail;
+import com.github.jsoncat.core.springmvc.factory.FullHttpResponseFactory;
+import com.github.jsoncat.core.springmvc.factory.ParameterResolverFactory;
+import com.github.jsoncat.core.springmvc.factory.RouteMethodMapper;
+import com.github.jsoncat.core.springmvc.resolver.ParameterResolver;
+import com.github.jsoncat.core.springmvc.util.UrlUtil;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.CharEncoding;
+import org.apache.commons.codec.Charsets;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @Description GET请求处理器
+ * @Author Goodenough
+ * @Date 2021/3/7 14:21
+ */
+@Slf4j
+public class GetRequestHandler implements RequestHandler{
+
+    @Override
+    public FullHttpResponse handle(FullHttpRequest fullHttpRequest) {
+        String requestUri = fullHttpRequest.uri();
+        //获取请求参数  "a=1&b=2&c=3"
+        Map<String, String> queryParameterMappings = getQueryParams(requestUri);
+        //获取请求路径  "/user"
+        String requestPath = UrlUtil.getRequestPath(requestUri);
+        // 获得处理该请求路径的方法
+        MethodDetail methodDetail = RouteMethodMapper.getMethodDetail(requestPath, HttpMethod.GET);
+        Method targetMethod = methodDetail.getMethod();
+        if (targetMethod == null){
+            return null;
+        }
+        log.info("requestPath -> target method [{}]", targetMethod.getName());
+        // 拿到请求参数的值，去执行对应 controller 的方法
+        Parameter[] targetMethodParameters = targetMethod.getParameters();
+        List<Object> targetMethodParams = new ArrayList<>();
+        for (Parameter parameter : targetMethodParameters) {
+            ParameterResolver parameterResolver = ParameterResolverFactory.get(parameter);
+            if (parameterResolver != null) {
+                Object param = parameterResolver.resolve(methodDetail, parameter);
+                targetMethodParams.add(param);
+            }
+        }
+        String beanName = BeanHelper.getBeanName(methodDetail.getMethod().getDeclaringClass());
+        Object targetObject = BeanFactory.BEANS.get(beanName);
+        // 执行 controller 方法并响应
+        return FullHttpResponseFactory.getSuccessResponse(targetMethod, targetMethodParams, targetObject);
+    }
+
+    /**
+     * 获得 uri "?"后的参数  ?a=1&b=2&c=3
+     * @param uri requestUri
+     * @return Map<String, String> 参数键值对  a=1
+     */
+    private Map<String, String> getQueryParams(String uri) {
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri, Charsets.toCharset(CharEncoding.UTF_8));
+        Map<String, List<String>> parameters = queryStringDecoder.parameters();
+        Map<String, String> queryParams = new HashMap<>();
+        for (Map.Entry<String, List<String>> attr : parameters.entrySet()) {
+            for (String attrVal : attr.getValue()) {
+                queryParams.put(attr.getKey(), attrVal);
+            }
+        }
+        return queryParams;
+    }
+}

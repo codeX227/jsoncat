@@ -3,6 +3,7 @@ package com.github.jsoncat.core.springmvc.factory;
 import com.github.jsoncat.annotation.springmvc.GetMapping;
 import com.github.jsoncat.annotation.springmvc.PostMapping;
 import com.github.jsoncat.annotation.springmvc.RestController;
+import com.github.jsoncat.core.springmvc.entity.MethodDetail;
 import com.github.jsoncat.factory.ClassFactory;
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -20,7 +21,7 @@ public class RouteMethodMapper {
 
     public static final HttpMethod[] HTTP_METHODS = {HttpMethod.GET, HttpMethod.POST};
 
-    //key : http method    value : url -> method
+    //key : http method    value : formatted url -> method
     private static final Map<HttpMethod, Map<String, Method>> REQUEST_METHOD_MAP = new HashMap<>(2);
 
     // key : http method   value : formatted url -> original url
@@ -88,5 +89,17 @@ public class RouteMethodMapper {
         String originPattern = url.replaceAll("(\\{\\w+})", "[\\\\u4e00-\\\\u9fa5_a-zA-Z0-9]+");
         String pattern = "^" + originPattern + "/?$";
         return pattern.replaceAll("/+", "/");
+    }
+
+    /**
+     * 构造 MethodDetail 对象
+     * @param requestPath 请求路径
+     * @param httpMethod 请求方式
+     * @return MethodDetail
+     */
+    public static MethodDetail getMethodDetail(String requestPath, HttpMethod httpMethod) {
+        MethodDetail methodDetail = new MethodDetail();
+        methodDetail.build(requestPath, REQUEST_METHOD_MAP.get(httpMethod), REQUEST_URL_MAP.get(httpMethod));
+        return methodDetail;
     }
 }
