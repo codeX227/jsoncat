@@ -10,6 +10,7 @@ import java.util.Map;
  * @Date 2021/3/5 21:24
  */
 public abstract class AbstractResourceLoader implements ResourceLoader{
+
     @Override
     public Map<String, String> loadResource(Path path) throws IOException {
         return loadResources(path);

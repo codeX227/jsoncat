@@ -34,19 +34,20 @@ public class GetRequestHandler implements RequestHandler{
     @Override
     public FullHttpResponse handle(FullHttpRequest fullHttpRequest) {
         String requestUri = fullHttpRequest.uri();
-        //获取请求参数  "a=1&b=2&c=3"
         Map<String, String> queryParameterMappings = getQueryParams(requestUri);
-        //获取请求路径  "/user"
+        // get http request path，such as "/user"
         String requestPath = UrlUtil.getRequestPath(requestUri);
-        // 获得处理该请求路径的方法
+        // get target method
         MethodDetail methodDetail = RouteMethodMapper.getMethodDetail(requestPath, HttpMethod.GET);
+        methodDetail.setQueryParameterMappings(queryParameterMappings);
         Method targetMethod = methodDetail.getMethod();
-        if (targetMethod == null){
+        if (targetMethod == null) {
             return null;
         }
         log.info("requestPath -> target method [{}]", targetMethod.getName());
-        // 拿到请求参数的值，去执行对应 controller 的方法
         Parameter[] targetMethodParameters = targetMethod.getParameters();
+        // target method parameters.
+        // notice! you should convert it to array when pass into the executeMethod method
         List<Object> targetMethodParams = new ArrayList<>();
         for (Parameter parameter : targetMethodParameters) {
             ParameterResolver parameterResolver = ParameterResolverFactory.get(parameter);
@@ -57,7 +58,6 @@ public class GetRequestHandler implements RequestHandler{
         }
         String beanName = BeanHelper.getBeanName(methodDetail.getMethod().getDeclaringClass());
         Object targetObject = BeanFactory.BEANS.get(beanName);
-        // 执行 controller 方法并响应
         return FullHttpResponseFactory.getSuccessResponse(targetMethod, targetMethodParams, targetObject);
     }
 
@@ -67,8 +67,8 @@ public class GetRequestHandler implements RequestHandler{
      * @return Map<String, String> 参数键值对  a=1
      */
     private Map<String, String> getQueryParams(String uri) {
-        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri, Charsets.toCharset(CharEncoding.UTF_8));
-        Map<String, List<String>> parameters = queryStringDecoder.parameters();
+        QueryStringDecoder queryDecoder = new QueryStringDecoder(uri, Charsets.toCharset(CharEncoding.UTF_8));
+        Map<String, List<String>> parameters = queryDecoder.parameters();
         Map<String, String> queryParams = new HashMap<>();
         for (Map.Entry<String, List<String>> attr : parameters.entrySet()) {
             for (String attrVal : attr.getValue()) {

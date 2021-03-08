@@ -24,20 +24,18 @@ public final class BeanFactory {
     public static final Map<String, Object> BEANS = new ConcurrentHashMap<>(128);
 
     //key -> className    value -> beanNames
-    public static final Map<String, String[]> SINGLE_BEAN_NAMES_TYPE_MAP = new ConcurrentHashMap<>(128);
+    private static final Map<String, String[]> SINGLE_BEAN_NAMES_TYPE_MAP = new ConcurrentHashMap<>(128);
 
-    public static void loadBeans(){
-        Set<Class<?>> componentClasses = ClassFactory.CLASS.get(Component.class);
-        for (Class<?> aClass : componentClasses) {
+    public static void loadBeans() {
+        ClassFactory.CLASSES.get(Component.class).forEach(aClass -> {
             String beanName = BeanHelper.getBeanName(aClass);
-            Object instance = ReflectionUtil.newInstance(aClass);
-            BEANS.put(beanName, instance);
-        }
-        Set<Class<?>> restControllerClasses = ClassFactory.CLASS.get(RestController.class);
-        for (Class<?> aClass : restControllerClasses) {
-            Object instance = ReflectionUtil.newInstance(aClass);
-            BEANS.put(aClass.getName(), instance);
-        }
+            Object obj = ReflectionUtil.newInstance(aClass);
+            BEANS.put(beanName, obj);
+        });
+        ClassFactory.CLASSES.get(RestController.class).forEach(aClass -> {
+            Object obj = ReflectionUtil.newInstance(aClass);
+            BEANS.put(aClass.getName(), obj);
+        });
         BEANS.put(ConfigurationManager.class.getName(), new ConfigurationManager(ConfigurationFactory.getConfig()));
     }
 
@@ -49,22 +47,23 @@ public final class BeanFactory {
      */
     public static <T> T getBean(Class<T> type) {
         String[] beanNames = getBeanNamesForType(type);
-        if (beanNames.length == 0)
-            throw new DoGetBeanException("not found bean implement, the bean : " + type.getName());
+        if (beanNames.length == 0) {
+            throw new DoGetBeanException("not fount bean implement，the bean :" + type.getName());
+        }
         Object beanInstance = BEANS.get(beanNames[0]);
-        if (!type.isInstance(beanInstance))
-            throw new DoGetBeanException("not found bean implement, the bean : " + type.getName());
+        if (!type.isInstance(beanInstance)) {
+            throw new DoGetBeanException("not fount bean implement，the bean :" + type.getName());
+        }
         return type.cast(beanInstance);
     }
-
     /**
      * 根据类型获取 beanNames
      * @param type 目标类型
      * @return String[] beanNames
      */
-    private static String[] getBeanNamesForType(Class<?> type){
-        String className = type.getName();
-        String[] beanNames = SINGLE_BEAN_NAMES_TYPE_MAP.get(className);
+    private static String[] getBeanNamesForType(Class<?> type) {
+        String beanName = type.getName();
+        String[] beanNames = SINGLE_BEAN_NAMES_TYPE_MAP.get(beanName);
         if (beanNames == null) {
             List<String> beanNamesList = new ArrayList<>();
             for (Map.Entry<String, Object> beanEntry : BEANS.entrySet()) {
@@ -82,7 +81,7 @@ public final class BeanFactory {
                 }
             }
             beanNames = beanNamesList.toArray(new String[0]);
-            SINGLE_BEAN_NAMES_TYPE_MAP.put(className, beanNames);
+            SINGLE_BEAN_NAMES_TYPE_MAP.put(beanName, beanNames);
         }
         return beanNames;
     }
@@ -97,13 +96,14 @@ public final class BeanFactory {
         });
     }
 
-    public static <T> Map<String, T> getBeansOfType(Class<T> type){
+    public static <T> Map<String, T> getBeansOfType(Class<T> type) {
         Map<String, T> result = new HashMap<>();
         String[] beanNames = getBeanNamesForType(type);
         for (String beanName : beanNames) {
             Object beanInstance = BEANS.get(beanName);
-            if (!type.isInstance(beanInstance))
+            if (!type.isInstance(beanInstance)) {
                 throw new DoGetBeanException("not fount bean implement，the bean :" + type.getName());
+            }
             result.put(beanName, type.cast(beanInstance));
         }
         return result;

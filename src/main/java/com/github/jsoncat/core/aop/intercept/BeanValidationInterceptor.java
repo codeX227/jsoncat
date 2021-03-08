@@ -18,7 +18,7 @@ public class BeanValidationInterceptor extends Interceptor{
 
     private final Validator validator;
 
-    public BeanValidationInterceptor(){
+    public BeanValidationInterceptor() {
         ValidatorFactory validatorFactory = Validation.byProvider(HibernateValidator.class)
                 .configure()
                 .messageInterpolator(new ParameterMessageInterpolator())
@@ -29,12 +29,12 @@ public class BeanValidationInterceptor extends Interceptor{
     // bean 是否支持验证
     @Override
     public boolean supports(Object bean) {
-        return bean != null && bean.getClass().isAnnotationPresent(Validated.class);
+        return (bean != null && bean.getClass().isAnnotationPresent(Validated.class));
     }
 
+    //验证方法上每个参数的注解
     @Override
     public Object intercept(MethodInvocation methodInvocation) {
-        //验证方法上每个参数的注解
         Annotation[][] parameterAnnotations = methodInvocation.getTargetMethod().getParameterAnnotations();
         Object[] args = methodInvocation.getArgs();
         for (int i = 0; i < args.length; i++) {
@@ -42,8 +42,9 @@ public class BeanValidationInterceptor extends Interceptor{
                     .anyMatch(annotation -> annotation.annotationType() == Valid.class);
             if (isNeedValidating) {
                 Set<ConstraintViolation<Object>> results = validator.validate(args[i]);
-                if (!results.isEmpty())
+                if (!results.isEmpty()) {
                     throw new ConstraintViolationException(results);
+                }
             }
         }
         return methodInvocation.proceed();

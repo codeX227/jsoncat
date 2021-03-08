@@ -22,7 +22,7 @@ public class RequestHandlerFactory {
         REQUEST_HANDLERS.put(HttpMethod.POST, new PostRequestHandler());
     }
 
-    public static RequestHandler get(HttpMethod httpMethod){
+    public static RequestHandler get(HttpMethod httpMethod) {
         return REQUEST_HANDLERS.get(httpMethod);
     }
 }

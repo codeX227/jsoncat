@@ -16,7 +16,7 @@ public class SystemConstants {
             + "*                                                                                   *\n"
             + "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n";
 
-    private SystemConstants(){
 
+    private SystemConstants() {
     }
 }

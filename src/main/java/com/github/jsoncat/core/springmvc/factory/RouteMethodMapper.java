@@ -37,24 +37,24 @@ public class RouteMethodMapper {
     /**
      * 加载标记了 GetMapping 或 PostMapping 注解的方法并建立 url 映射
      */
-    public static void loadRoutes(){
-        Set<Class<?>> classes = ClassFactory.CLASS.get(RestController.class);
+    public static void loadRoutes() {
+        Set<Class<?>> classes = ClassFactory.CLASSES.get(RestController.class);
         for (Class<?> aClass : classes) {
             RestController restController = aClass.getAnnotation(RestController.class);
-            if (restController != null) {
-                String baseUrl = restController.value();
+            if (null != restController) {
                 Method[] methods = aClass.getDeclaredMethods();
+                String baseUrl = restController.value();
                 for (Method method : methods) {
                     if (method.isAnnotationPresent(GetMapping.class)) {
                         GetMapping getMapping = method.getAnnotation(GetMapping.class);
                         if (getMapping != null) {
-                            mapUrlToMethod(baseUrl+getMapping.value(), method, HttpMethod.GET);
+                            mapUrlToMethod(baseUrl + getMapping.value(), method, HttpMethod.GET);
                         }
                     }
                     if (method.isAnnotationPresent(PostMapping.class)) {
                         PostMapping postMapping = method.getAnnotation(PostMapping.class);
                         if (postMapping != null) {
-                            mapUrlToMethod(baseUrl+postMapping.value(), method, HttpMethod.POST);
+                            mapUrlToMethod(baseUrl + postMapping.value(), method, HttpMethod.POST);
                         }
                     }
                 }
@@ -68,12 +68,12 @@ public class RouteMethodMapper {
      * @param method 请求对应映射的 Method
      * @param httpMethod HttpMethod
      */
-    private static void mapUrlToMethod(String url, Method method, HttpMethod httpMethod){
+    private static void mapUrlToMethod(String url, Method method, HttpMethod httpMethod) {
         String formattedUrl = formatUrl(url);
         Map<String, Method> urlToMethodMap = REQUEST_METHOD_MAP.get(httpMethod);
         Map<String, String> formattedUrlToUrlMap = REQUEST_URL_MAP.get(httpMethod);
         if (urlToMethodMap.containsKey(formattedUrl)) {
-            throw new IllegalArgumentException(String.format("duplicate url : %s", url));
+            throw new IllegalArgumentException(String.format("duplicate url: %s", url));
         }
         urlToMethodMap.put(formattedUrl, method);
         formattedUrlToUrlMap.put(formattedUrl, url);

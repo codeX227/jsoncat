@@ -21,21 +21,21 @@ public class MethodDetail {
 
     // 需要映射的 Controller 方法
     private Method method;
-    // url 参数的映射
+    // url parameter mapping
     private Map<String, String> urlParameterMappings;
-    // url 查询参数的映射
+    // url query parameter mapping
     private Map<String, String> queryParameterMappings;
-    // json 类型的 http 请求数据
+    // json type http post request data
     private String json;
 
     /**
      * 构造 MethodDetail 对象
      * @param requestPath 请求路径
-     * @param requestMapping formatted url
+     * @param requestMappings formatted url
      * @param urlMappings formatted url
      */
-    public void build(String requestPath, Map<String, Method> requestMapping, Map<String, String> urlMappings){
-        requestMapping.forEach((key, value) -> {
+    public void build(String requestPath, Map<String, Method> requestMappings, Map<String, String> urlMappings) {
+        requestMappings.forEach((key, value) -> {
             Pattern pattern = Pattern.compile(key);
             boolean b = pattern.matcher(requestPath).find();
             if (b) {
@@ -59,7 +59,7 @@ public class MethodDetail {
         String[] requestParams = requestPath.split("/");
         String[] urlParams = url.split("/");
         Map<String, String> urlParameterMappings = new HashMap<>();
-        for (int i = 0; i < urlParams.length; i++) {
+        for (int i = 1; i < urlParams.length; i++) {
             urlParameterMappings.put(urlParams[i].replace("{", "").replace("}", ""), requestParams[i]);
         }
         return urlParameterMappings;

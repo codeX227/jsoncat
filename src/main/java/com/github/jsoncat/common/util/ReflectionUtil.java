@@ -7,6 +7,7 @@ import org.reflections.scanners.TypeAnnotationsScanner;
 import javax.validation.ConstraintViolationException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -24,11 +25,11 @@ public class ReflectionUtil {
      * @param annotation 指定的注解
      * @return 指定包下标记了指定注解的类的 class 对象集合
      */
-    public static Set<Class<?>> scanAnnotationClass(String[] packageNames, Class<? extends Annotation> annotation){
+    public static Set<Class<?>> scanAnnotatedClass(String[] packageNames, Class<? extends Annotation> annotation) {
         Reflections reflections = new Reflections(packageNames, new TypeAnnotationsScanner());
-        Set<Class<?>> annotationClass = reflections.getTypesAnnotatedWith(annotation, true);
-        log.info("The number of class Annotated with @"+annotation.getSimpleName()+":[{}]", annotationClass.size());
-        return annotationClass;
+        Set<Class<?>> annotatedClass = reflections.getTypesAnnotatedWith(annotation, true);
+        log.info("The number of class Annotated with @" + annotation.getSimpleName() + ":[{}]", annotatedClass.size());
+        return annotatedClass;
     }
 
     /**
@@ -37,9 +38,10 @@ public class ReflectionUtil {
      * @param interfaceClass 指定接口
      * @return 实现了指定接口的子类集合
      */
-    public static <T> Set<Class<? extends T>> getSubClass(Object[] packageNames, Class<T> interfaceClass){
+    public static <T> Set<Class<? extends T>> getSubClass(Object[] packageNames, Class<T> interfaceClass) {
         Reflections reflections = new Reflections(packageNames);
         return reflections.getSubTypesOf(interfaceClass);
+
     }
 
     /**
@@ -47,7 +49,7 @@ public class ReflectionUtil {
      * @param cls 目标类型
      * @return 通过目标类型创建的实例对象
      */
-    public static Object newInstance(Class<?> cls){
+    public static Object newInstance(Class<?> cls) {
         try {
             return cls.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
@@ -61,13 +63,14 @@ public class ReflectionUtil {
      * @param field 目标字段
      * @param value 要设置的值
      */
-    public static void setField(Object obj, Field field, Object value){
+    public static void setField(Object obj, Field field, Object value) {
         field.setAccessible(true);
         try {
             field.set(obj, value);
         } catch (IllegalAccessException impossible) {
             throw new AssertionError(impossible);
         }
+
     }
 
     /**
@@ -77,7 +80,7 @@ public class ReflectionUtil {
      * @param args 方法的参数
      * @return 方法执行结果
      */
-    public static Object executeTargetMethod(Object targetObject, Method method, Object... args){
+    public static Object executeTargetMethod(Object targetObject, Method method, Object... args) {
         try {
             return method.invoke(targetObject, args);
         } catch (Throwable t) {
@@ -94,13 +97,11 @@ public class ReflectionUtil {
      * @param method 目标方法
      * @param args 方法所需参数
      */
-    public static void executeTargetMethodNoResult(Object targetObject, Method method, Object... args){
+    public static void executeTargetMethodNoResult(Object targetObject, Method method, Object... args) {
         try {
+            // invoke target method through reflection
             method.invoke(targetObject, args);
-        } catch (Throwable t) {
-            if (t.getCause() != null && t.getCause() instanceof ConstraintViolationException) {
-                throw (ConstraintViolationException) t.getCause();
-            }
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
         }
     }
 }

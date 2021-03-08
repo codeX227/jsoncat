@@ -1,7 +1,8 @@
-package com.github.jsoncat.serialize;
+package com.github.jsoncat.serialize.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jsoncat.serialize.Serializer;
 
 import java.io.IOException;
 
@@ -10,7 +11,7 @@ import java.io.IOException;
  * @Author Goodenough
  * @Date 2021/3/7 17:03
  */
-public class JacksonSerializer implements Serializer{
+public class JacksonSerializer implements Serializer {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -18,6 +19,7 @@ public class JacksonSerializer implements Serializer{
     public byte[] serialize(Object object) {
         byte[] bytes = new byte[0];
         try {
+            // Java object to JSON string, default compact-print
             bytes = objectMapper.writeValueAsBytes(object);
         } catch (JsonProcessingException e) {
             e.printStackTrace();

@@ -12,7 +12,7 @@ public abstract class AbstractAopProxyBeanPostProcessor implements BeanPostProce
     @Override
     public Object postProcessAfterInitialization(Object bean) {
         Object wrapperProxyBean = bean;
-        // 链式包装目标类
+        //链式包装目标类
         for (Interceptor interceptor : InterceptorFactory.getInterceptors()) {
             if (interceptor.supports(bean)) {
                 wrapperProxyBean = wrapBean(wrapperProxyBean, interceptor);

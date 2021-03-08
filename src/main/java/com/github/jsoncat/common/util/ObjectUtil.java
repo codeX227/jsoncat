@@ -16,7 +16,7 @@ public class ObjectUtil {
      * @param s 要转换的字符串
      * @throws NumberFormatException When string to number, if string is not a number,then throw NumberFormatException
      */
-    public static Object convert(Class<?> targetType, String s){
+    public static Object convert(Class<?> targetType, String s) {
         PropertyEditor editor = PropertyEditorManager.findEditor(targetType);
         editor.setAsText(s);
         return editor.getValue();

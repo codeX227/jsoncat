@@ -17,14 +17,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ClassFactory {
 
-    public static final Map<Class<? extends Annotation>, Set<Class<?>>> CLASS = new ConcurrentHashMap<>();
+    public static final Map<Class<? extends Annotation>, Set<Class<?>>> CLASSES = new ConcurrentHashMap<>();
 
-    public static void loadClass(String[] packageName){
-        Set<Class<?>> restControllers = ReflectionUtil.scanAnnotationClass(packageName, RestController.class);
-        Set<Class<?>> components = ReflectionUtil.scanAnnotationClass(packageName, Component.class);
-        Set<Class<?>> aspects = ReflectionUtil.scanAnnotationClass(packageName, Aspect.class);
-        CLASS.put(RestController.class, restControllers);
-        CLASS.put(Component.class, components);
-        CLASS.put(Aspect.class, aspects);
+    public static void loadClass(String[] packageName) {
+
+        Set<Class<?>> restControllers = ReflectionUtil.scanAnnotatedClass(packageName, RestController.class);
+        Set<Class<?>> components = ReflectionUtil.scanAnnotatedClass(packageName, Component.class);
+        Set<Class<?>> aspects = ReflectionUtil.scanAnnotatedClass(packageName, Aspect.class);
+        CLASSES.put(RestController.class, restControllers);
+        CLASSES.put(Component.class, components);
+        CLASSES.put(Aspect.class, aspects);
     }
 }

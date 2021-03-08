@@ -27,20 +27,19 @@ public class InterceptorFactory {
     /**
      * 加载拦截器
      */
-    public static void loadInterceptors(String[] packageNames){
-        // 获取实现了 Interceptor 接口的类
-        Set<Class<? extends Interceptor>> interceptorClasses = ReflectionUtil.getSubClass(packageNames, Interceptor.class);
-        // 获取被 @Aspect 注解的类
-        Set<Class<?>> aspects = ClassFactory.CLASS.get(Aspect.class);
-        // 遍历拦截器类，存放到集合中
+    public static void loadInterceptors(String[] packageName) {
+        // 获取指定包中实现了 Interceptor 接口的类
+        Set<Class<? extends Interceptor>> interceptorClasses = ReflectionUtil.getSubClass(packageName, Interceptor.class);
+        // 获取被 @Aspect 标记的类
+        Set<Class<?>> aspects = ClassFactory.CLASSES.get(Aspect.class);
+        // 遍历所有拦截器类
         interceptorClasses.forEach(interceptorClass -> {
             try {
                 interceptors.add(interceptorClass.newInstance());
             } catch (InstantiationException | IllegalAccessException e) {
-                throw new CannotInitializeConstructorException("not init construct, the interceptor name :"+interceptorClass.getSimpleName());
+                throw new CannotInitializeConstructorException("not init constructor , the interceptor name :" + interceptorClass.getSimpleName());
             }
         });
-        // 遍历 @Aspect 注解的类，一个 @Aspect 类对应一个 InternallyAspectInterceptor 拦截器对象
         aspects.forEach(aClass -> {
             Object obj = ReflectionUtil.newInstance(aClass);
             Interceptor interceptor = new InternallyAspectInterceptor(obj);
@@ -50,9 +49,9 @@ public class InterceptorFactory {
             }
             interceptors.add(interceptor);
         });
-        // 添加 Bean 验证拦截器
+        // 添加Bean验证拦截器
         interceptors.add(new BeanValidationInterceptor());
-        // 根据 Order 对拦截器排序
+        // 根据 order 为拦截器排序
         interceptors = interceptors.stream().sorted(Comparator.comparing(Interceptor::getOrder)).collect(Collectors.toList());
     }
 

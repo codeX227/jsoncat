@@ -25,23 +25,23 @@ public class AutowiredBeanInitialization {
 
     private final String[] packageNames;
 
-    // 二级缓存，解决循环依赖
-    private static final Map<String, Object> SINGLE_OBJECTS = new ConcurrentHashMap<>(64);
-
     public AutowiredBeanInitialization(String[] packageNames) {
         this.packageNames = packageNames;
     }
 
+    //二级缓存（解决循环依赖问题）
+    private static final Map<String, Object> SINGLETON_OBJECTS = new ConcurrentHashMap<>(64);
+
     public void initialize(Object beanInstance) {
         Class<?> beanClass = beanInstance.getClass();
         Field[] beanFields = beanClass.getDeclaredFields();
-        // 遍历 bean 的属性
-        if (beanFields.length >0) {
+        // 遍历bean的属性
+        if (beanFields.length > 0) {
             for (Field beanField : beanFields) {
                 if (beanField.isAnnotationPresent(Autowired.class)) {
                     Object beanFieldInstance = processAutowiredAnnotationField(beanField);
                     String beanFieldName = BeanHelper.getBeanName(beanField.getType());
-                    // 解决循环依赖
+                    // 解决循环依赖问题
                     beanFieldInstance = resolveCircularDependency(beanInstance, beanFieldInstance, beanFieldName);
                     // AOP
                     BeanPostProcessor beanPostProcessor = AopProxyBeanPostProcessorFactory.get(beanField.getType());
@@ -65,40 +65,41 @@ public class AutowiredBeanInitialization {
         Class<?> beanFieldClass = beanField.getType();
         String beanFieldName = BeanHelper.getBeanName(beanFieldClass);
         Object beanFieldInstance;
-        if (beanFieldClass.isAnnotation()) {
+        if (beanFieldClass.isInterface()) {
             @SuppressWarnings("unchecked")
             Set<Class<?>> subClasses = ReflectionUtil.getSubClass(packageNames, (Class<Object>) beanFieldClass);
-            if (subClasses.size() == 0)
-                throw new InterfaceNotHaveImplementedClassException(beanFieldClass.getName()+"is interface and do not have implemented class exception");
+            if (subClasses.size() == 0) {
+                throw new InterfaceNotHaveImplementedClassException(beanFieldClass.getName() + "is interface and do not have implemented class exception");
+            }
             if (subClasses.size() == 1) {
                 Class<?> subClass = subClasses.iterator().next();
                 beanFieldName = BeanHelper.getBeanName(subClass);
             }
-            if (subClasses.size() > 1){
+            if (subClasses.size() > 1) {
                 Qualifier qualifier = beanField.getDeclaredAnnotation(Qualifier.class);
                 beanFieldName = qualifier == null ? beanFieldName : qualifier.value();
             }
+
         }
         beanFieldInstance = BeanFactory.BEANS.get(beanFieldName);
         if (beanFieldInstance == null) {
-            throw new CanNotDetermineTargetBeanException("can not determine target bean of"+beanFieldClass.getName());
+            throw new CanNotDetermineTargetBeanException("can not determine target bean of" + beanFieldClass.getName());
         }
         return beanFieldInstance;
     }
 
     /**
-     * 解决循环依赖
+     * 二级缓存解决循环依赖问题
      * @param beanInstance 要解决循环依赖所在的 bean
      * @param beanFieldInstance 要解决循环依赖的字段实例
      * @param beanFieldName 字段的 beanName
      * @return Object 字段实例
      */
     private Object resolveCircularDependency(Object beanInstance, Object beanFieldInstance, String beanFieldName) {
-        if (SINGLE_OBJECTS.containsKey(beanFieldName)) {
-            beanFieldInstance = SINGLE_OBJECTS.get(beanFieldName);
+        if (SINGLETON_OBJECTS.containsKey(beanFieldName)) {
+            beanFieldInstance = SINGLETON_OBJECTS.get(beanFieldName);
         } else {
-            SINGLE_OBJECTS.put(beanFieldName, beanFieldInstance);
-            // TODO: 2021/3/6 循环依赖传参
+            SINGLETON_OBJECTS.put(beanFieldName, beanFieldInstance);
             initialize(beanInstance);
         }
         return beanFieldInstance;
@@ -113,8 +114,9 @@ public class AutowiredBeanInitialization {
         String key = beanField.getDeclaredAnnotation(Value.class).value();
         ConfigurationManager configurationManager = (ConfigurationManager) BeanFactory.BEANS.get(ConfigurationManager.class.getName());
         String value = configurationManager.getString(key);
-        if (value == null)
+        if (value == null) {
             throw new IllegalArgumentException("can not find target value for property:{" + key + "}");
+        }
         return ObjectUtil.convert(beanField.getType(), value);
     }
 }

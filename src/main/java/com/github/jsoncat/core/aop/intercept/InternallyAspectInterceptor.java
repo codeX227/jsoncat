@@ -24,7 +24,7 @@ public class InternallyAspectInterceptor extends Interceptor{
     // 标记了 @Aspect 的 bean
     private final Object adviceBean;
     // 存放 @Pointcut 的节点表达式
-    private final HashSet<String> expressions = new HashSet<>();
+    private final HashSet<String> expressionUrls = new HashSet<>();
     // 存放 @Before 标记的前置通知
     private final List<Method> beforeMethods = new ArrayList<>();
     // 存放 @After 标记的后置通知
@@ -39,7 +39,7 @@ public class InternallyAspectInterceptor extends Interceptor{
         for (Method method : adviceBean.getClass().getMethods()) {
             Pointcut pointcut = method.getAnnotation(Pointcut.class);
             if (!Objects.isNull(pointcut)) {
-                expressions.add(pointcut.value());
+                expressionUrls.add(pointcut.value());
             }
             Before before = method.getAnnotation(Before.class);
             if (!Objects.isNull(before)) {
@@ -54,12 +54,13 @@ public class InternallyAspectInterceptor extends Interceptor{
 
     @Override
     public boolean supports(Object bean) {
-        return expressions.stream().anyMatch(url -> PatternMatchUtils.simpleMatch(url, bean.getClass().getName())) && (!beforeMethods.isEmpty() || !afterMethods.isEmpty());
+        return expressionUrls.stream().anyMatch(url -> PatternMatchUtils.simpleMatch(url, bean.getClass().getName())) && (!beforeMethods.isEmpty() || !afterMethods.isEmpty());
     }
 
     @Override
     public Object intercept(MethodInvocation methodInvocation) {
-        JoinPoint joinPoint = new JoinPointImpl(adviceBean, methodInvocation.getTargetObject(), methodInvocation.getArgs());
+        JoinPoint joinPoint = new JoinPointImpl(adviceBean, methodInvocation.getTargetObject(),
+                methodInvocation.getArgs());
         beforeMethods.forEach(method -> ReflectionUtil.executeTargetMethodNoResult(adviceBean, method, joinPoint));
         Object result = methodInvocation.proceed();
         afterMethods.forEach(method -> ReflectionUtil.executeTargetMethodNoResult(adviceBean, method, result, joinPoint));

@@ -15,17 +15,18 @@ import java.lang.reflect.Method;
 @AllArgsConstructor
 public class MethodInvocation {
 
+    //target object
     private final Object targetObject;
-
+    //target method
     private final Method targetMethod;
-
+    //the parameter of target method
     private final Object[] args;
 
     /**
      * 执行指定方法
      * @return Object 方法执行结果
      */
-    public Object proceed(){
+    public Object proceed() {
         return ReflectionUtil.executeTargetMethod(targetObject, targetMethod, args);
     }
 }

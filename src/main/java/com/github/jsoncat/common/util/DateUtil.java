@@ -13,12 +13,12 @@ import java.util.Locale;
  */
 public class DateUtil {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter
-            .ofLocalizedDateTime(FormatStyle.SHORT)
-            .withLocale(Locale.CHINA)
-            .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+                    .withLocale(Locale.CHINA)
+                    .withZone(ZoneId.systemDefault());
 
-    public static String now(){
+    public static String now() {
         return FORMATTER.format(Instant.now());
     }
 }

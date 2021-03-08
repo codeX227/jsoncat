@@ -20,12 +20,12 @@ public interface Configuration {
 
     Boolean getBoolean(String id);
 
-    default void put(String id, String content){
+    default void put(String id, String content) {
     }
 
-    default void putAll(Map<String, String> map){
+    default void putAll(Map<String, String> maps) {
     }
 
-    default void loadResources(List<Path> resourcePaths){
+    default void loadResources(List<Path> resourcePaths) {
     }
 }

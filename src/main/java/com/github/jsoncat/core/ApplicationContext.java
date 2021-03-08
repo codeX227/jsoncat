@@ -28,13 +28,13 @@ import java.util.Objects;
  */
 public final class ApplicationContext {
 
-    private static final ApplicationContext APPLICATIONCONTEXT = new ApplicationContext();
+    private static final ApplicationContext APPLICATION_CONTEXT = new ApplicationContext();
 
-    public static ApplicationContext getApplicationContext(){
-        return APPLICATIONCONTEXT;
+    public static ApplicationContext getApplicationContext() {
+        return APPLICATION_CONTEXT;
     }
 
-    public void run(Class<?> applicationClass){
+    public void run(Class<?> applicationClass) {
         //打印标志
         Banner.print();
         //获得启动类所在包
@@ -54,7 +54,7 @@ public final class ApplicationContext {
         //在来自ClassFactory的类上应用bean post处理器。
         //例如，用@Component或@RestController注释的类
         BeanFactory.applyBeanPostProcessors();
-        //启动服务监听回调
+        // Perform some callback events
         callRunners();
    }
 
@@ -63,17 +63,17 @@ public final class ApplicationContext {
      * @param applicationClass 应用启动类
      * @return 包名
      */
-    private static String[] getPackageNames(Class<?> applicationClass){
-        ComponentScan annotationScan = applicationClass.getAnnotation(ComponentScan.class);
-        return !Objects.isNull(annotationScan) ?
-                annotationScan.value() : new String[]{applicationClass.getPackage().getName()};
+    private static String[] getPackageNames(Class<?> applicationClass) {
+        ComponentScan componentScan = applicationClass.getAnnotation(ComponentScan.class);
+        return !Objects.isNull(componentScan) ? componentScan.value()
+                : new String[]{applicationClass.getPackage().getName()};
     }
 
     /**
      * 加载配置文件
      * @param applicationClass 应用启动类
      */
-    private void loadResources(Class<?> applicationClass){
+    private void loadResources(Class<?> applicationClass) {
         ClassLoader classLoader = applicationClass.getClassLoader();
         List<Path> filePaths = new ArrayList<>();
         for (String configName : Configuration.DEFAULT_CONFIG_NAMES) {
@@ -81,7 +81,7 @@ public final class ApplicationContext {
             if (!Objects.isNull(url)) {
                 try {
                     filePaths.add(Paths.get(url.toURI()));
-                } catch (URISyntaxException e) {
+                } catch (URISyntaxException ignored) {
                 }
             }
         }
@@ -91,6 +91,7 @@ public final class ApplicationContext {
 
     private void callRunners() {
         List<ApplicationRunner> runners = new ArrayList<>(BeanFactory.getBeansOfType(ApplicationRunner.class).values());
+        //The last step is to start web application
         runners.add(() -> {
             HttpServer httpServer = new HttpServer();
             httpServer.start();

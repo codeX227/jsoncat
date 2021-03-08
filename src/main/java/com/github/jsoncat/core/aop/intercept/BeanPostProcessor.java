@@ -7,8 +7,7 @@ package com.github.jsoncat.core.aop.intercept;
  */
 public interface BeanPostProcessor {
 
-    default Object postProcessAfterInitialization(Object bean){
-
+    default Object postProcessAfterInitialization(Object bean) {
         return bean;
     }
 }

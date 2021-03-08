@@ -18,12 +18,15 @@ import java.util.List;
 public class ConfigurationManager implements Configuration{
 
     private static final String PROPERTIES_FILE_EXTENSION = ".properties";
+
     private static final String YAML_FILE_EXTENSION = ".yaml";
+
     private static final String YML_FILE_EXTENSION = ".yml";
+
 
     private final Configuration configuration;
 
-    public ConfigurationManager(Configuration configuration){
+    public ConfigurationManager(Configuration configuration) {
         this.configuration = configuration;
     }
 
@@ -54,7 +57,7 @@ public class ConfigurationManager implements Configuration{
                 if (fileName.endsWith(PROPERTIES_FILE_EXTENSION)) {
                     ResourceLoader resourceLoader = new PropertiesResourceLoader();
                     configuration.putAll(resourceLoader.loadResource(resourcePath));
-                } else if (fileName.endsWith(YAML_FILE_EXTENSION) || fileName.endsWith(YML_FILE_EXTENSION)) {
+                } else if (fileName.endsWith(YML_FILE_EXTENSION) || fileName.endsWith(YAML_FILE_EXTENSION)) {
                     ResourceLoader resourceLoader = new YamlResourceLoader();
                     configuration.putAll(resourceLoader.loadResource(resourcePath));
                 }

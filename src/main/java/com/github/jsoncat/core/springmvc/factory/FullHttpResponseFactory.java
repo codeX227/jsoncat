@@ -2,13 +2,11 @@ package com.github.jsoncat.core.springmvc.factory;
 
 import com.github.jsoncat.common.util.ReflectionUtil;
 import com.github.jsoncat.exception.ErrorResponse;
-import com.github.jsoncat.serialize.JacksonSerializer;
-import com.github.jsoncat.serialize.Serializer;
+import com.github.jsoncat.serialize.impl.JacksonSerializer;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 
 import java.lang.reflect.Method;
@@ -26,17 +24,21 @@ public class FullHttpResponseFactory {
 
     private static final AsciiString CONTENT_TYPE = AsciiString.cached("Content-Type");
     private static final AsciiString CONTENT_LENGTH = AsciiString.cached("Content-Length");
-    private static final JacksonSerializer JACKSON_SERIALIZER = new JacksonSerializer();
+    private static final JacksonSerializer JSON_SERIALIZER = new JacksonSerializer();
 
     /**
      * 创建错误响应对象
+     * @param url 请求错误的 url
+     * @param message 错误信息
+     * @param httpResponseStatus 响应状态对象
+     * @return FullHttpResponse 响应对象
      */
-    public static FullHttpResponse getErrorResponse(String url, String message, HttpResponseStatus httpResponseStatus){
+    public static FullHttpResponse getErrorResponse(String url, String message, HttpResponseStatus httpResponseStatus) {
         ErrorResponse errorResponse = new ErrorResponse(httpResponseStatus.code(), httpResponseStatus.reasonPhrase(), message, url);
-        byte[] content = JACKSON_SERIALIZER.serialize(errorResponse);
-        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, httpResponseStatus, Unpooled.wrappedBuffer(content));
+        byte[] content = JSON_SERIALIZER.serialize(errorResponse);
+        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, httpResponseStatus, Unpooled.wrappedBuffer(content));
         response.headers().set(CONTENT_TYPE, "application/json");
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        response.headers().setInt(CONTENT_LENGTH, response.content().readableBytes());
         return response;
     }
 
@@ -44,15 +46,16 @@ public class FullHttpResponseFactory {
      * 执行 controller 方法并响应
      * @param targetMethod 要执行的 controller 方法
      * @param targetMethodParams 方法参数
-     * @param targetObject 要执行方法的 controller
+     * @param targetObject 要执行方法的 controller 对象
      * @return FullHttpResponse 响应对象
      */
-    public static FullHttpResponse getSuccessResponse(Method targetMethod, List<Object> targetMethodParams, Object targetObject){
+    public static FullHttpResponse getSuccessResponse(Method targetMethod, List<Object> targetMethodParams, Object targetObject) {
+        //the return type of targetMethod is void
         if (targetMethod.getReturnType() == void.class) {
-            ReflectionUtil.executeTargetMethodNoResult(targetObject, targetMethod, targetMethodParams);
+            ReflectionUtil.executeTargetMethodNoResult(targetObject, targetMethod, targetMethodParams.toArray());
             return buildSuccessResponse();
         } else {
-            Object result = ReflectionUtil.executeTargetMethod(targetObject, targetMethod, targetMethodParams);
+            Object result = ReflectionUtil.executeTargetMethod(targetObject, targetMethod, targetMethodParams.toArray());
             return buildSuccessResponse(result);
         }
     }
@@ -60,21 +63,21 @@ public class FullHttpResponseFactory {
     /**
      * 创建有响应内容的 Success 响应对象
      */
-    private static FullHttpResponse buildSuccessResponse(Object o){
-        byte[] content = JACKSON_SERIALIZER.serialize(o);
-        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1,OK, Unpooled.wrappedBuffer(content));
+    private static FullHttpResponse buildSuccessResponse(Object o) {
+        byte[] content = JSON_SERIALIZER.serialize(o);
+        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(content));
         response.headers().set(CONTENT_TYPE, "application/json");
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        response.headers().setInt(CONTENT_LENGTH, response.content().readableBytes());
         return response;
     }
 
     /**
      * 创建无响应内容的 Success 响应对象
      */
-    private static FullHttpResponse buildSuccessResponse(){
-        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1,OK);
+    private static FullHttpResponse buildSuccessResponse() {
+        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK);
         response.headers().set(CONTENT_TYPE, "application/json");
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        response.headers().setInt(CONTENT_LENGTH, response.content().readableBytes());
         return response;
     }
 

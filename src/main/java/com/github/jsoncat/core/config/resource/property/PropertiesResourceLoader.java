@@ -23,7 +23,7 @@ public class PropertiesResourceLoader extends AbstractResourceLoader {
     @Override
     protected Map<String, String> loadResources(Path path) throws IOException {
         Properties properties = new Properties();
-        try (InputStream inputStream = Files.newInputStream(path); Reader reader = new InputStreamReader(inputStream)){
+        try (InputStream stream = Files.newInputStream(path); Reader reader = new InputStreamReader(stream)) {
             properties.load(reader);
         }
         Map<String, String> resource = new HashMap<>(properties.size());

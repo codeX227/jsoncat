@@ -38,7 +38,7 @@ public class AbstractConfiguration implements Configuration{
     }
 
     @Override
-    public void putAll(Map<String, String> map) {
-        CONFIGURATION_CACHE.putAll(map);
+    public void putAll(Map<String, String> maps) {
+        CONFIGURATION_CACHE.putAll(maps);
     }
 }
